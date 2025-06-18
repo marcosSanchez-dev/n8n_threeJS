@@ -1,0 +1,19 @@
+{
+  "name": "n8n-threejs-voice-scene",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "App para generar escenas 3D con voz usando Telegram + n8n + Three.js",
+  "scripts": {
+    "start:api": "node server.js",
+    "start:viewer": "npx serve .",
+    "start": "concurrently \"npm run start:api\" \"npm run start:viewer\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "serve": "^14.2.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "objects": [
+    {
+      "type": "sphere",
+      "color": "green",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "size": 1,
+      "material": "standard"
+    }
+  ]
+}
