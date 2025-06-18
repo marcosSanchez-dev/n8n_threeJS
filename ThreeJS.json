@@ -1,67 +1,45 @@
 {
-  "name": "ThreeJS",
+  "name": "ThreeJS Voice Scene Generator",
   "nodes": [
     {
       "parameters": {
-        "updates": [
-          "message"
-        ],
+        "updates": ["message"],
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
-      "position": [
-        -380,
-        -20
-      ],
-      "id": "315b4f74-59d8-46db-9848-4cd9e23284f5",
+      "position": [-380, -20],
+      "id": "telegramTrigger",
       "name": "Telegram Trigger",
-      "webhookId": "da0c4be4-468d-4d65-8e0e-6222ab93454c",
+      "webhookId": "REDACTED",
       "credentials": {
         "telegramApi": {
-          "id": "FQ5kxImJkYWFDBiZ",
+          "id": "__REDACTED__",
           "name": "Telegram account"
         }
       }
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.openai.com/v1/chat/completions",
-        "sendHeaders": true,
-        "specifyHeaders": "json",
-        "jsonHeaders": "{\n  \"Authorization\": \"Bearer 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\",\n  \"Content-Type\": \"application/json\"\n}\n",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-3.5-turbo\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Actúa como un generador de escenas 3D interactivas para una visualización en tiempo real con Three.js. Responde únicamente con un JSON válido que tenga esta estructura:\\n\\n{\\n  \\\"objects\\\": [\\n    {\\n      \\\"type\\\": \\\"sphere\\\" | \\\"cube\\\" | \\\"cone\\\",\\n      \\\"color\\\": \\\"color_en_ingles_o_hex\\\",\\n      \\\"position\\\": [x, y, z],\\n      \\\"size\\\": número,\\n      \\\"material\\\": \\\"standard\\\" | \\\"physical\\\" | \\\"basic\\\",\\n      \\\"roughness\\\": número (opcional),\\n      \\\"metalness\\\": número (opcional)\\n    }\\n  ]\\n}\\n\\nNo expliques nada. No incluyas texto adicional. Solo responde con un JSON válido que siga esa estructura.\\n\\nPuedes usar múltiples objetos si el usuario lo solicita. El color debe estar en inglés (ej. \\\"red\\\", \\\"green\\\") o en formato HEX (ej. \\\"#ff0088\\\"). La posición es un array de tres números. Si no se especifica `material`, usa \\\"standard\\\" por defecto.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.text }}\"\n    }\n  ],\n  \"temperature\": 0.7\n}\n",
+        "url": "=https://api.telegram.org/bot{{ TELEGRAM_TOKEN }}/getFile?file_id={{ $json[\"message\"][\"voice\"][\"file_id\"] }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        460,
-        -20
-      ],
-      "id": "a329bf27-a547-4439-b73a-1ebe060fab9d",
-      "name": "nodo GPT"
+      "position": [-160, -20],
+      "id": "getFilePath",
+      "name": "Get file path"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://fresh-buses-start.loca.lt/update-scene",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.parse($json[\"choices\"][0][\"message\"][\"content\"]) }}",
+        "url": "=https://api.telegram.org/file/bot{{ TELEGRAM_TOKEN }}/{{ $json[\"result\"][\"file_path\"] }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        700,
-        -20
-      ],
-      "id": "2be819a9-3cf6-4e52-ab8d-f07e4d9875cd",
-      "name": "HTTP Request"
+      "position": [60, -20],
+      "id": "downloadAudio",
+      "name": "Download .ogg"
     },
     {
       "parameters": {
@@ -69,7 +47,7 @@
         "url": "https://api.openai.com/v1/audio/transcriptions",
         "sendHeaders": true,
         "specifyHeaders": "json",
-        "jsonHeaders": "{\n  \"Authorization\": \"Bearer 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\"\n}\n",
+        "jsonHeaders": "{ \"Authorization\": \"Bearer {{ OPENAI_KEY }}\" }",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
@@ -89,93 +67,92 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        260,
-        -20
-      ],
-      "id": "d6e6c66e-1993-4e98-bd26-11ebacc3133a",
-      "name": "nodo Whisper"
+      "position": [260, -20],
+      "id": "whisperNode",
+      "name": "Whisper (Transcription)"
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/bot8096598170:AAFE2eORwN2U9SIKk_8hhIZX8UXJ4NlQkww/getFile?file_id={{ $json[\"message\"][\"voice\"][\"file_id\"] }}",
-        "options": {}
+        "method": "POST",
+        "url": "=https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Authorization\": \"Bearer {{ OPENAI_KEY }}\",\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-3.5-turbo\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Actúa como un generador de escenas 3D interactivas para una visualización en tiempo real con Three.js. Responde únicamente con un JSON válido que tenga esta estructura:\\n\\n{\\n  \\\"objects\\\": [\\n    {\\n      \\\"type\\\": \\\"sphere\\\" | \\\"cube\\\" | \\\"cone\\\",\\n      \\\"color\\\": \\\"color_en_ingles_o_hex\\\",\\n      \\\"position\\\": [x, y, z],\\n      \\\"size\\\": número,\\n      \\\"material\\\": \\\"standard\\\" | \\\"physical\\\" | \\\"basic\\\",\\n      \\\"roughness\\\": número (opcional),\\n      \\\"metalness\\\": número (opcional)\\n    }\\n  ]\\n}\\n\\nNo expliques nada. No incluyas texto adicional. Solo responde con un JSON válido que siga esa estructura.\\n\\nPuedes usar múltiples objetos si el usuario lo solicita. El color debe estar en inglés (ej. \\\"red\\\", \\\"green\\\") o en formato HEX (ej. \\\"#ff0088\\\"). La posición es un array de tres números. Si no se especifica `material`, usa \\\"standard\\\" por defecto.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.text }}\"\n    }\n  ],\n  \"temperature\": 0.7\n}"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -160,
-        -20
-      ],
-      "id": "a5ad6767-082f-4d24-a7dc-763403c70d22",
-      "name": "file_path"
+      "position": [460, -20],
+      "id": "gptNode",
+      "name": "GPT (Scene Generator)"
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/file/bot8096598170:AAFE2eORwN2U9SIKk_8hhIZX8UXJ4NlQkww/{{ $json[\"result\"][\"file_path\"] }}",
-        "options": {}
+        "method": "POST",
+        "url": "https://your-server-url/update-scene",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.parse($json[\"choices\"][0][\"message\"][\"content\"]) }}"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        60,
-        -20
-      ],
-      "id": "046fc3c0-2931-4af8-80a9-2b0688be53ae",
-      "name": ".ogg"
+      "position": [700, -20],
+      "id": "sendToThreeJS",
+      "name": "Update Scene"
     }
   ],
-  "pinData": {},
   "connections": {
     "Telegram Trigger": {
       "main": [
         [
           {
-            "node": "file_path",
+            "node": "getFilePath",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "nodo GPT": {
+    "getFilePath": {
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "downloadAudio",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "nodo Whisper": {
+    "downloadAudio": {
       "main": [
         [
           {
-            "node": "nodo GPT",
+            "node": "whisperNode",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "file_path": {
+    "whisperNode": {
       "main": [
         [
           {
-            "node": ".ogg",
+            "node": "gptNode",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    ".ogg": {
+    "gptNode": {
       "main": [
         [
           {
-            "node": "nodo Whisper",
+            "node": "sendToThreeJS",
             "type": "main",
             "index": 0
           }
@@ -184,14 +161,6 @@
     }
   },
   "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "355f1c9a-07c6-4a18-a137-3987a46ceee6",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "26233d63e54df148b3bbdd7145136c9829d64884684fdcc581596125213b2bdb"
-  },
-  "id": "jigC3y3cNEIDjI1o",
-  "tags": []
+  "settings": {},
+  "id": "threejs-voice-generator"
 }
